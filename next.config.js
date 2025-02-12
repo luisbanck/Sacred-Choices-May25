@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // Esto es clave para Next.js en Netlify
+  output: 'export', // Esto es clave para que Vercel genere una versión estática
 }
 
 module.exports = nextConfig;
