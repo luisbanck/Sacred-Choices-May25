@@ -1,9 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+interface Block {
+  name: string;
+  description: string;
+  choices: string[];
+}
+
+interface SavedData {
+  [key: string]: {
+    blocks: Block[];
+    completedChoices: boolean[][][];
+    dailyValueCreation: string[];
+    dailyMeditations: string[];
+  };
+}
 
 export default function Home() {
-  const initialBlocks = [
+  const initialBlocks: Block[] = [
     {
       name: "1. Prime",
       description: "Build Your Higher Self",
@@ -31,12 +52,15 @@ export default function Home() {
     },
   ];
 
-  const [blocks, setBlocks] = useState(initialBlocks);
-  const [completedChoices, setCompletedChoices] = useState(
+  const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
+  const [completedChoices, setCompletedChoices] = useState<boolean[][][]>(
     initialBlocks.map((block) => block.choices.map(() => Array(7).fill(false)))
   );
-  const [dailyValueCreation, setDailyValueCreation] = useState(Array(7).fill(""));
-  const [week, setWeek] = useState("");
+  const [dailyValueCreation, setDailyValueCreation] = useState<string[]>(Array(7).fill(""));
+  const [dailyMeditations, setDailyMeditations] = useState<string[]>(Array(7).fill(""));
+  const [week, setWeek] = useState<string>("");
+  const [selectedWeek, setSelectedWeek] = useState<Date>(new Date());
+  const [savedData, setSavedData] = useState<Record<string, { blocks: any[]; completedChoices: any[]; dailyValueCreation: any; dailyMeditations: any; }>>({});
 
   useEffect(() => {
     const today = new Date();
@@ -46,7 +70,11 @@ export default function Home() {
     const lastDayOfWeek = new Date(
       today.setDate(today.getDate() - today.getDay() + 7)
     );
-    const options = { month: "long", day: "numeric", year: "numeric" };
+    const options: Intl.DateTimeFormatOptions = { 
+      month: "long", 
+      day: "numeric", 
+      year: "numeric" as "numeric" | "2-digit"
+    };
     setWeek(
       `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
         undefined,
@@ -55,31 +83,62 @@ export default function Home() {
     );
 
     // Load data from localStorage
-    const savedBlocks = localStorage.getItem("blocks");
-    const savedCompletedChoices = localStorage.getItem("completedChoices");
-    const savedDailyValueCreation = localStorage.getItem("dailyValueCreation");
-
-    if (savedBlocks && savedCompletedChoices && savedDailyValueCreation) {
-      setBlocks(JSON.parse(savedBlocks));
-      setCompletedChoices(JSON.parse(savedCompletedChoices));
-      setDailyValueCreation(JSON.parse(savedDailyValueCreation));
+    const savedData = localStorage.getItem("savedData");
+    if (savedData) {
+      setSavedData(JSON.parse(savedData));
     }
   }, []);
 
-  const toggleCompletion = (blockIndex, choiceIndex, dayIndex) => {
+  useEffect(() => {
+    const weekKey = getWeekKey(selectedWeek);
+    if (savedData[weekKey]) {
+      const { blocks, completedChoices, dailyValueCreation, dailyMeditations } = savedData[weekKey];
+      setBlocks(blocks);
+      setCompletedChoices(completedChoices);
+      setDailyValueCreation(dailyValueCreation);
+      setDailyMeditations(dailyMeditations);
+    } else {
+      setBlocks(initialBlocks);
+      setCompletedChoices(initialBlocks.map((block) => block.choices.map(() => Array(7).fill(false))));
+      setDailyValueCreation(Array(7).fill(""));
+      setDailyMeditations(Array(7).fill(""));
+    }
+  }, [selectedWeek, savedData]);
+
+  const getWeekKey = (date: Date): string => {
+    const firstDayOfWeek = new Date(date.setDate(date.getDate() - date.getDay() + 1));
+    const lastDayOfWeek = new Date(date.setDate(date.getDate() - date.getDay() + 7));
+    const options: Intl.DateTimeFormatOptions = { 
+      month: "long", 
+      day: "numeric", 
+      year: "numeric" as "numeric" | "2-digit"
+    };
+    return `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
+      undefined,
+      options
+    )}`;
+  };
+
+  const toggleCompletion = (blockIndex: number, choiceIndex: number, dayIndex: number) => {
     const updatedCompletedChoices = [...completedChoices];
     updatedCompletedChoices[blockIndex][choiceIndex][dayIndex] =
       !updatedCompletedChoices[blockIndex][choiceIndex][dayIndex];
     setCompletedChoices(updatedCompletedChoices);
   };
 
-  const handleValueChange = (dayIndex, value) => {
+  const handleValueChange = (dayIndex: number, value: string) => {
     const updatedDailyValueCreation = [...dailyValueCreation];
     updatedDailyValueCreation[dayIndex] = value;
     setDailyValueCreation(updatedDailyValueCreation);
   };
 
-  const handleAddChoice = (blockIndex) => {
+  const handleMeditationChange = (dayIndex: number, value: string) => {
+    const updatedDailyMeditations = [...dailyMeditations];
+    updatedDailyMeditations[dayIndex] = value;
+    setDailyMeditations(updatedDailyMeditations);
+  };
+
+  const handleAddChoice = (blockIndex: number) => {
     const updatedBlocks = [...blocks];
     updatedBlocks[blockIndex].choices.push("New Choice");
     setBlocks(updatedBlocks);
@@ -89,13 +148,13 @@ export default function Home() {
     setCompletedChoices(updatedCompletedChoices);
   };
 
-  const handleEditChoice = (blockIndex, choiceIndex, value) => {
+  const handleEditChoice = (blockIndex: number, choiceIndex: number, value: string) => {
     const updatedBlocks = [...blocks];
     updatedBlocks[blockIndex].choices[choiceIndex] = value;
     setBlocks(updatedBlocks);
   };
 
-  const handleDeleteChoice = (blockIndex, choiceIndex) => {
+  const handleDeleteChoice = (blockIndex: number, choiceIndex: number) => {
     const updatedBlocks = [...blocks];
     updatedBlocks[blockIndex].choices.splice(choiceIndex, 1);
     setBlocks(updatedBlocks);
@@ -105,7 +164,7 @@ export default function Home() {
     setCompletedChoices(updatedCompletedChoices);
   };
 
-  const calculateStats = (blockIndex) => {
+  const calculateStats = (blockIndex: number) => {
     const blockChoices = completedChoices[blockIndex];
     const totalDays = blockChoices.reduce(
       (sum, choice) => sum + choice.filter((day) => day).length,
@@ -118,20 +177,56 @@ export default function Home() {
   };
 
   const saveData = () => {
-    localStorage.setItem("blocks", JSON.stringify(blocks));
-    localStorage.setItem("completedChoices", JSON.stringify(completedChoices));
-    localStorage.setItem("dailyValueCreation", JSON.stringify(dailyValueCreation));
+    const weekKey = getWeekKey(selectedWeek);
+    const newSavedData = {
+      ...savedData,
+      [weekKey]: {
+        blocks,
+        completedChoices,
+        dailyValueCreation,
+        dailyMeditations,
+      },
+    };
+    setSavedData(newSavedData);
+    localStorage.setItem("savedData", JSON.stringify(newSavedData));
     alert("Data saved successfully!");
+  };
+
+  const blockScores = blocks.map((_, index) => calculateStats(index).blockScore);
+
+  const data = {
+    labels: ["Prime", "Prosper", "Play", "Purpose", "Peace"],
+    datasets: [
+      {
+        label: 'Completion Percentage',
+        data: blockScores,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const options = {
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+      },
+    },
   };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold text-center mb-8">
-        Sacred Choices: Daily Architecture for Optimized Performance
+      <h1 className="text-4xl font-bold text-center mb-2">
+        Sacred Choices
       </h1>
-      <p className="text-center mb-6">{week}</p>
-      <p className="text-center mb-6">
-        Fulfill the Five Blocks that Will Make Your Life Soar
+      <h2 className="text-4xl font-bold text-center mb-8">
+        Daily Architecture for Optimized Performance
+      </h2>
+      <p className="text-center text-2xl font-bold mb-6">{week}</p>
+      <p className="text-center text-2xl font-bold mb-6">
+        My Path to Greatness
       </p>
       <div className="text-center my-4">
         <button
@@ -209,6 +304,10 @@ export default function Home() {
         ))}
       </div>
       <div className="mt-6 border p-4 rounded shadow">
+        <h2 className="text-2xl font-bold mb-4">Progress Overview</h2>
+        <Bar data={data} options={options} />
+      </div>
+      <div className="mt-6 border p-4 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">Daily Value Creation</h2>
         <div className="grid grid-cols-1 gap-2">
           {"Monday Tuesday Wednesday Thursday Friday Saturday Sunday"
@@ -216,17 +315,43 @@ export default function Home() {
             .map((day, dayIndex) => (
               <div key={dayIndex} className="flex items-center">
                 <span className="w-24 font-medium">{day}:</span>
-                <input
-                  type="text"
+                <textarea
                   className="flex-grow border p-2 rounded"
                   value={dailyValueCreation[dayIndex]}
                   onChange={(e) => handleValueChange(dayIndex, e.target.value)}
+                  rows={2}
                 />
               </div>
             ))}
         </div>
       </div>
+      <div className="mt-6 border p-4 rounded shadow">
+        <h2 className="text-2xl font-bold mb-4">Daily Meditations</h2>
+        <div className="grid grid-cols-1 gap-2">
+          {"Monday Tuesday Wednesday Thursday Friday Saturday Sunday"
+            .split(" ")
+            .map((day, dayIndex) => (
+              <div key={dayIndex} className="flex items-center">
+                <span className="w-24 font-medium">{day}:</span>
+                <textarea
+                  className="flex-grow border p-2 rounded"
+                  value={dailyMeditations[dayIndex]}
+                  onChange={(e) => handleMeditationChange(dayIndex, e.target.value)}
+                  rows={2}
+                />
+              </div>
+            ))}
+        </div>
+      </div>
+      <div className="text-center my-4">
+        <DatePicker
+          selected={selectedWeek}
+          onChange={(date) => date && setSelectedWeek(date)}
+          dateFormat="MM/dd/yyyy"
+          showWeekNumbers
+          inline
+        />
+      </div>
     </div>
   );
 }
-
