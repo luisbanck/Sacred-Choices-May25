@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -20,6 +20,8 @@ interface SavedData {
     completedChoices: boolean[][][];
     dailyValueCreation: string[];
     dailyMeditations: string[];
+    dailyAffirmations: string;
+    guidingPrinciples: string;
   };
 }
 
@@ -28,22 +30,22 @@ export default function Home() {
     {
       name: "1. Prime",
       description: "Build Your Higher Self",
-      choices: ["Rise early", "Learn", "Exercise"],
+      choices: ["Rise early", "God First", "Learn", "Exercise", "Meditation", "Nutrition"],
     },
     {
       name: "2. Prosper",
       description: "Create and Monetize Value",
-      choices: ["Networking", "Skill development"],
+      choices: ["DW#1 TCF", "DW#2 GrowTime AI", "DW#3 BubbleTech"],
     },
     {
       name: "3. Play",
       description: "Enjoy the Best Things Life Has to Offer",
-      choices: ["Quality time", "Hobbies"],
+      choices: ["Quality Time With Loved Ones", "Fun", "Plan and Enjoy Transformational Experiences"],
     },
     {
       name: "4. Purpose",
       description: "Contribute Locally and Globally",
-      choices: ["Volunteering", "Mentoring"],
+      choices: ["Sagetown", "FUNDEMEX"],
     },
     {
       name: "5. Peace",
@@ -58,65 +60,89 @@ export default function Home() {
   );
   const [dailyValueCreation, setDailyValueCreation] = useState<string[]>(Array(7).fill(""));
   const [dailyMeditations, setDailyMeditations] = useState<string[]>(Array(7).fill(""));
+  const [dailyAffirmations, setDailyAffirmations] = useState<string>("");
+  const [guidingPrinciples, setGuidingPrinciples] = useState<string>("");
   const [week, setWeek] = useState<string>("");
-  const [selectedWeek, setSelectedWeek] = useState<Date>(new Date());
-  const [savedData, setSavedData] = useState<Record<string, { blocks: any[]; completedChoices: any[]; dailyValueCreation: any; dailyMeditations: any; }>>({});
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [availableWeeks, setAvailableWeeks] = useState<string[]>([]);
 
   useEffect(() => {
     const today = new Date();
-    const firstDayOfWeek = new Date(
-      today.setDate(today.getDate() - today.getDay() + 1)
-    );
-    const lastDayOfWeek = new Date(
-      today.setDate(today.getDate() - today.getDay() + 7)
-    );
+    const firstDayOfWeek = new Date(today);
+    firstDayOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
     const options: Intl.DateTimeFormatOptions = { 
       month: "long", 
       day: "numeric", 
       year: "numeric" as "numeric" | "2-digit"
     };
-    setWeek(
-      `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
-        undefined,
-        options
-      )}`
-    );
+    const currentWeek = `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
+      undefined,
+      options
+    )}`;
+    setWeek(currentWeek);
 
-    // Load data from localStorage
-    const savedData = localStorage.getItem("savedData");
-    if (savedData) {
-      setSavedData(JSON.parse(savedData));
-    }
+    loadData(currentWeek);
+    loadAvailableWeeks();
   }, []);
 
-  useEffect(() => {
-    const weekKey = getWeekKey(selectedWeek);
-    if (savedData[weekKey]) {
-      const { blocks, completedChoices, dailyValueCreation, dailyMeditations } = savedData[weekKey];
-      setBlocks(blocks);
-      setCompletedChoices(completedChoices);
-      setDailyValueCreation(dailyValueCreation);
-      setDailyMeditations(dailyMeditations);
+  const loadAvailableWeeks = () => {
+    const weeks = Object.keys(localStorage)
+      .filter(key => key.startsWith('blocks_'))
+      .map(key => key.replace('blocks_', ''));
+    setAvailableWeeks(weeks);
+  };
+
+  const loadData = (week: string) => {
+    const savedBlocks = localStorage.getItem(`blocks_${week}`);
+    const savedCompletedChoices = localStorage.getItem(`completedChoices_${week}`);
+    const savedDailyValueCreation = localStorage.getItem(`dailyValueCreation_${week}`);
+    const savedDailyMeditations = localStorage.getItem(`dailyMeditations_${week}`);
+    const savedDailyAffirmations = localStorage.getItem(`dailyAffirmations_${week}`);
+    const savedGuidingPrinciples = localStorage.getItem(`guidingPrinciples_${week}`);
+
+    if (
+      savedBlocks &&
+      savedCompletedChoices &&
+      savedDailyValueCreation &&
+      savedDailyMeditations &&
+      savedDailyAffirmations &&
+      savedGuidingPrinciples
+    ) {
+      setBlocks(JSON.parse(savedBlocks));
+      setCompletedChoices(JSON.parse(savedCompletedChoices));
+      setDailyValueCreation(JSON.parse(savedDailyValueCreation));
+      setDailyMeditations(JSON.parse(savedDailyMeditations));
+      setDailyAffirmations(JSON.parse(savedDailyAffirmations));
+      setGuidingPrinciples(savedGuidingPrinciples);
     } else {
       setBlocks(initialBlocks);
       setCompletedChoices(initialBlocks.map((block) => block.choices.map(() => Array(7).fill(false))));
       setDailyValueCreation(Array(7).fill(""));
       setDailyMeditations(Array(7).fill(""));
+      setDailyAffirmations("");
+      setGuidingPrinciples("");
     }
-  }, [selectedWeek, savedData]);
+  };
 
-  const getWeekKey = (date: Date): string => {
-    const firstDayOfWeek = new Date(date.setDate(date.getDate() - date.getDay() + 1));
-    const lastDayOfWeek = new Date(date.setDate(date.getDate() - date.getDay() + 7));
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+    const firstDayOfWeek = new Date(date);
+    firstDayOfWeek.setDate(date.getDate() - date.getDay() + 1);
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
     const options: Intl.DateTimeFormatOptions = { 
       month: "long", 
       day: "numeric", 
       year: "numeric" as "numeric" | "2-digit"
     };
-    return `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
+    const selectedWeek = `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
       undefined,
       options
     )}`;
+    setWeek(selectedWeek);
+    loadData(selectedWeek);
   };
 
   const toggleCompletion = (blockIndex: number, choiceIndex: number, dayIndex: number) => {
@@ -136,6 +162,14 @@ export default function Home() {
     const updatedDailyMeditations = [...dailyMeditations];
     updatedDailyMeditations[dayIndex] = value;
     setDailyMeditations(updatedDailyMeditations);
+  };
+
+  const handleAffirmationChange = (value: string) => {
+    setDailyAffirmations(value);
+  };
+
+  const handleGuidingPrinciplesChange = (value: string) => {
+    setGuidingPrinciples(value);
   };
 
   const handleAddChoice = (blockIndex: number) => {
@@ -176,22 +210,6 @@ export default function Home() {
     return { totalDays, blockScore };
   };
 
-  const saveData = () => {
-    const weekKey = getWeekKey(selectedWeek);
-    const newSavedData = {
-      ...savedData,
-      [weekKey]: {
-        blocks,
-        completedChoices,
-        dailyValueCreation,
-        dailyMeditations,
-      },
-    };
-    setSavedData(newSavedData);
-    localStorage.setItem("savedData", JSON.stringify(newSavedData));
-    alert("Data saved successfully!");
-  };
-
   const blockScores = blocks.map((_, index) => calculateStats(index).blockScore);
 
   const data = {
@@ -216,6 +234,17 @@ export default function Home() {
     },
   };
 
+  const saveData = () => {
+    localStorage.setItem(`blocks_${week}`, JSON.stringify(blocks));
+    localStorage.setItem(`completedChoices_${week}`, JSON.stringify(completedChoices));
+    localStorage.setItem(`dailyValueCreation_${week}`, JSON.stringify(dailyValueCreation));
+    localStorage.setItem(`dailyMeditations_${week}`, JSON.stringify(dailyMeditations));
+    localStorage.setItem(`dailyAffirmations_${week}`, JSON.stringify(dailyAffirmations));
+    localStorage.setItem(`guidingPrinciples_${week}`, guidingPrinciples);
+    alert("Data saved successfully!");
+    loadAvailableWeeks();
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-4xl font-bold text-center mb-2">
@@ -235,6 +264,25 @@ export default function Home() {
         >
           Save
         </button>
+      </div>
+      <div className="text-center my-4">
+        <label htmlFor="datePicker" className="mr-2">Select Date:</label>
+        <DatePicker
+          id="datePicker"
+          selected={selectedDate}
+          onChange={handleDateChange}
+          className="border p-2 rounded"
+        />
+      </div>
+      <div className="mt-6 border p-4 rounded shadow">
+        <h2 className="text-2xl font-bold mb-4">Guiding Principles</h2>
+        <textarea
+          className="w-full border p-2 rounded h-64"
+          value={guidingPrinciples}
+          onChange={(e) => handleGuidingPrinciplesChange(e.target.value)}
+          rows={20}
+          placeholder="Write your guiding principles here..."
+        />
       </div>
       <div className="space-y-6">
         {blocks.map((block, blockIndex) => (
@@ -343,13 +391,14 @@ export default function Home() {
             ))}
         </div>
       </div>
-      <div className="text-center my-4">
-        <DatePicker
-          selected={selectedWeek}
-          onChange={(date) => date && setSelectedWeek(date)}
-          dateFormat="MM/dd/yyyy"
-          showWeekNumbers
-          inline
+      <div className="mt-6 border p-4 rounded shadow">
+        <h2 className="text-2xl font-bold mb-4">Daily Affirmations</h2>
+        <textarea
+          className="w-full border p-2 rounded h-64" // Ajuste de altura
+          value={dailyAffirmations}
+          onChange={(e) => handleAffirmationChange(e.target.value)}
+          rows={20} // Ajuste de filas
+          placeholder="Write your daily affirmations here..."
         />
       </div>
     </div>
