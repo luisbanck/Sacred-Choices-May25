@@ -2,7 +2,7 @@ services:
   - type: web
     name: sacred-choices-backend
     env: python
-    rootDir: .  # Since we're already in the backend directory
+    rootDir: sacred-choices-backend  # Point to the backend directory
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn "app:create_app()"
     envVars:
