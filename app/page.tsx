@@ -99,6 +99,7 @@ export default function Home() {
     const savedCompletedChoices = localStorage.getItem(`completedChoices_${week}`);
     const savedDailyValueCreation = localStorage.getItem(`dailyValueCreation_${week}`);
     const savedDailyMeditations = localStorage.getItem(`dailyMeditations_${week}`);
+<<<<<<< HEAD
     const savedDailyAffirmations = localStorage.getItem(`dailyAffirmations_${week}`);
     const savedGuidingPrinciples = localStorage.getItem(`guidingPrinciples_${week}`);
 
@@ -110,19 +111,29 @@ export default function Home() {
       savedDailyAffirmations &&
       savedGuidingPrinciples
     ) {
+=======
+
+    if (savedBlocks && savedCompletedChoices && savedDailyValueCreation && savedDailyMeditations) {
+>>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
       setBlocks(JSON.parse(savedBlocks));
       setCompletedChoices(JSON.parse(savedCompletedChoices));
       setDailyValueCreation(JSON.parse(savedDailyValueCreation));
       setDailyMeditations(JSON.parse(savedDailyMeditations));
+<<<<<<< HEAD
       setDailyAffirmations(JSON.parse(savedDailyAffirmations));
       setGuidingPrinciples(savedGuidingPrinciples);
+=======
+>>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
     } else {
       setBlocks(initialBlocks);
       setCompletedChoices(initialBlocks.map((block) => block.choices.map(() => Array(7).fill(false))));
       setDailyValueCreation(Array(7).fill(""));
       setDailyMeditations(Array(7).fill(""));
+<<<<<<< HEAD
       setDailyAffirmations("");
       setGuidingPrinciples("");
+=======
+>>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
     }
   };
 
@@ -239,8 +250,11 @@ export default function Home() {
     localStorage.setItem(`completedChoices_${week}`, JSON.stringify(completedChoices));
     localStorage.setItem(`dailyValueCreation_${week}`, JSON.stringify(dailyValueCreation));
     localStorage.setItem(`dailyMeditations_${week}`, JSON.stringify(dailyMeditations));
+<<<<<<< HEAD
     localStorage.setItem(`dailyAffirmations_${week}`, JSON.stringify(dailyAffirmations));
     localStorage.setItem(`guidingPrinciples_${week}`, guidingPrinciples);
+=======
+>>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
     alert("Data saved successfully!");
     loadAvailableWeeks();
   };
@@ -274,6 +288,7 @@ export default function Home() {
           className="border p-2 rounded"
         />
       </div>
+<<<<<<< HEAD
       <div className="mt-6 border p-4 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">Guiding Principles</h2>
         <textarea
@@ -284,6 +299,8 @@ export default function Home() {
           placeholder="Write your guiding principles here..."
         />
       </div>
+=======
+>>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
       <div className="space-y-6">
         {blocks.map((block, blockIndex) => (
           <div key={blockIndex} className="border p-4 rounded shadow">
