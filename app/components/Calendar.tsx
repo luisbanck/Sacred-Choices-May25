@@ -3,10 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "./Calendar";
 
-const Calendar = () => {
-  return <div>Calendar Component</div>;
-};
-
 export default function Home() {
   const initialBlocks = [
     {
@@ -235,3 +231,12 @@ export default function Home() {
     </div>
   );
 }
+```
+
+import React from "react";
+
+const Calendar = () => {
+  return <div>Calendar Component</div>;
+};
+
+export default Calendar;

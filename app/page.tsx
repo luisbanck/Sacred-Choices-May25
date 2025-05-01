@@ -21,7 +21,10 @@ interface SavedData {
     dailyValueCreation: string[];
     dailyMeditations: string[];
     dailyAffirmations: string;
+<<<<<<< HEAD
     guidingPrinciples: string;
+=======
+>>>>>>> 3fab617 (First commit)
   };
 }
 
@@ -61,7 +64,10 @@ export default function Home() {
   const [dailyValueCreation, setDailyValueCreation] = useState<string[]>(Array(7).fill(""));
   const [dailyMeditations, setDailyMeditations] = useState<string[]>(Array(7).fill(""));
   const [dailyAffirmations, setDailyAffirmations] = useState<string>("");
+<<<<<<< HEAD
   const [guidingPrinciples, setGuidingPrinciples] = useState<string>("");
+=======
+>>>>>>> 3fab617 (First commit)
   const [week, setWeek] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [availableWeeks, setAvailableWeeks] = useState<string[]>([]);
@@ -100,6 +106,7 @@ export default function Home() {
     const savedDailyValueCreation = localStorage.getItem(`dailyValueCreation_${week}`);
     const savedDailyMeditations = localStorage.getItem(`dailyMeditations_${week}`);
 <<<<<<< HEAD
+<<<<<<< HEAD
     const savedDailyAffirmations = localStorage.getItem(`dailyAffirmations_${week}`);
     const savedGuidingPrinciples = localStorage.getItem(`guidingPrinciples_${week}`);
 
@@ -115,25 +122,38 @@ export default function Home() {
 
     if (savedBlocks && savedCompletedChoices && savedDailyValueCreation && savedDailyMeditations) {
 >>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
+=======
+    const savedDailyAffirmations = localStorage.getItem(`dailyAffirmations_${week}`);
+
+    if (savedBlocks && savedCompletedChoices && savedDailyValueCreation && savedDailyMeditations && savedDailyAffirmations) {
+>>>>>>> 3fab617 (First commit)
       setBlocks(JSON.parse(savedBlocks));
       setCompletedChoices(JSON.parse(savedCompletedChoices));
       setDailyValueCreation(JSON.parse(savedDailyValueCreation));
       setDailyMeditations(JSON.parse(savedDailyMeditations));
 <<<<<<< HEAD
+<<<<<<< HEAD
       setDailyAffirmations(JSON.parse(savedDailyAffirmations));
       setGuidingPrinciples(savedGuidingPrinciples);
 =======
 >>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
+=======
+      setDailyAffirmations(JSON.parse(savedDailyAffirmations));
+>>>>>>> 3fab617 (First commit)
     } else {
       setBlocks(initialBlocks);
       setCompletedChoices(initialBlocks.map((block) => block.choices.map(() => Array(7).fill(false))));
       setDailyValueCreation(Array(7).fill(""));
       setDailyMeditations(Array(7).fill(""));
 <<<<<<< HEAD
+<<<<<<< HEAD
       setDailyAffirmations("");
       setGuidingPrinciples("");
 =======
 >>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
+=======
+      setDailyAffirmations("");
+>>>>>>> 3fab617 (First commit)
     }
   };
 
@@ -179,10 +199,13 @@ export default function Home() {
     setDailyAffirmations(value);
   };
 
+<<<<<<< HEAD
   const handleGuidingPrinciplesChange = (value: string) => {
     setGuidingPrinciples(value);
   };
 
+=======
+>>>>>>> 3fab617 (First commit)
   const handleAddChoice = (blockIndex: number) => {
     const updatedBlocks = [...blocks];
     updatedBlocks[blockIndex].choices.push("New Choice");
@@ -251,10 +274,14 @@ export default function Home() {
     localStorage.setItem(`dailyValueCreation_${week}`, JSON.stringify(dailyValueCreation));
     localStorage.setItem(`dailyMeditations_${week}`, JSON.stringify(dailyMeditations));
 <<<<<<< HEAD
+<<<<<<< HEAD
     localStorage.setItem(`dailyAffirmations_${week}`, JSON.stringify(dailyAffirmations));
     localStorage.setItem(`guidingPrinciples_${week}`, guidingPrinciples);
 =======
 >>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
+=======
+    localStorage.setItem(`dailyAffirmations_${week}`, JSON.stringify(dailyAffirmations));
+>>>>>>> 3fab617 (First commit)
     alert("Data saved successfully!");
     loadAvailableWeeks();
   };
