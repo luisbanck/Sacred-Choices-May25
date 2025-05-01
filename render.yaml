@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: sacred-choices-backend
+    env: python
+    buildCommand: pip install -r sacred-choices-backend/requirements.txt
+    startCommand: cd sacred-choices-backend && gunicorn app:create_app()
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Will be set manually in Render dashboard
+      - key: SECRET_KEY
+        generateValue: true
+    autoDeploy: true 

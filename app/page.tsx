@@ -21,12 +21,11 @@ interface SavedData {
     dailyValueCreation: string[];
     dailyMeditations: string[];
     dailyAffirmations: string;
-<<<<<<< HEAD
     guidingPrinciples: string;
-=======
->>>>>>> 3fab617 (First commit)
   };
 }
+
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
 export default function Home() {
   const initialBlocks: Block[] = [
@@ -64,10 +63,7 @@ export default function Home() {
   const [dailyValueCreation, setDailyValueCreation] = useState<string[]>(Array(7).fill(""));
   const [dailyMeditations, setDailyMeditations] = useState<string[]>(Array(7).fill(""));
   const [dailyAffirmations, setDailyAffirmations] = useState<string>("");
-<<<<<<< HEAD
   const [guidingPrinciples, setGuidingPrinciples] = useState<string>("");
-=======
->>>>>>> 3fab617 (First commit)
   const [week, setWeek] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [availableWeeks, setAvailableWeeks] = useState<string[]>([]);
@@ -89,91 +85,69 @@ export default function Home() {
     )}`;
     setWeek(currentWeek);
 
-    loadData(currentWeek);
-    loadAvailableWeeks();
+    (async () => {
+      await loadData(currentWeek);
+      await loadAvailableWeeks();
+    })();
   }, []);
 
-  const loadAvailableWeeks = () => {
-    const weeks = Object.keys(localStorage)
-      .filter(key => key.startsWith('blocks_'))
-      .map(key => key.replace('blocks_', ''));
-    setAvailableWeeks(weeks);
-  };
-
-  const loadData = (week: string) => {
-    const savedBlocks = localStorage.getItem(`blocks_${week}`);
-    const savedCompletedChoices = localStorage.getItem(`completedChoices_${week}`);
-    const savedDailyValueCreation = localStorage.getItem(`dailyValueCreation_${week}`);
-    const savedDailyMeditations = localStorage.getItem(`dailyMeditations_${week}`);
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const savedDailyAffirmations = localStorage.getItem(`dailyAffirmations_${week}`);
-    const savedGuidingPrinciples = localStorage.getItem(`guidingPrinciples_${week}`);
-
-    if (
-      savedBlocks &&
-      savedCompletedChoices &&
-      savedDailyValueCreation &&
-      savedDailyMeditations &&
-      savedDailyAffirmations &&
-      savedGuidingPrinciples
-    ) {
-=======
-
-    if (savedBlocks && savedCompletedChoices && savedDailyValueCreation && savedDailyMeditations) {
->>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
-=======
-    const savedDailyAffirmations = localStorage.getItem(`dailyAffirmations_${week}`);
-
-    if (savedBlocks && savedCompletedChoices && savedDailyValueCreation && savedDailyMeditations && savedDailyAffirmations) {
->>>>>>> 3fab617 (First commit)
-      setBlocks(JSON.parse(savedBlocks));
-      setCompletedChoices(JSON.parse(savedCompletedChoices));
-      setDailyValueCreation(JSON.parse(savedDailyValueCreation));
-      setDailyMeditations(JSON.parse(savedDailyMeditations));
-<<<<<<< HEAD
-<<<<<<< HEAD
-      setDailyAffirmations(JSON.parse(savedDailyAffirmations));
-      setGuidingPrinciples(savedGuidingPrinciples);
-=======
->>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
-=======
-      setDailyAffirmations(JSON.parse(savedDailyAffirmations));
->>>>>>> 3fab617 (First commit)
-    } else {
-      setBlocks(initialBlocks);
-      setCompletedChoices(initialBlocks.map((block) => block.choices.map(() => Array(7).fill(false))));
-      setDailyValueCreation(Array(7).fill(""));
-      setDailyMeditations(Array(7).fill(""));
-<<<<<<< HEAD
-<<<<<<< HEAD
-      setDailyAffirmations("");
-      setGuidingPrinciples("");
-=======
->>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
-=======
-      setDailyAffirmations("");
->>>>>>> 3fab617 (First commit)
+  const loadAvailableWeeks = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/weeks`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch available weeks');
+      }
+      const weeks = await response.json();
+      setAvailableWeeks(weeks);
+    } catch (error) {
+      console.error('Error loading available weeks:', error);
     }
   };
 
-  const handleDateChange = (date: Date) => {
-    setSelectedDate(date);
-    const firstDayOfWeek = new Date(date);
-    firstDayOfWeek.setDate(date.getDate() - date.getDay() + 1);
-    const lastDayOfWeek = new Date(firstDayOfWeek);
-    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
-    const options: Intl.DateTimeFormatOptions = { 
-      month: "long", 
-      day: "numeric", 
-      year: "numeric" as "numeric" | "2-digit"
-    };
-    const selectedWeek = `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
-      undefined,
-      options
-    )}`;
-    setWeek(selectedWeek);
-    loadData(selectedWeek);
+  const loadData = async (week: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/data/${encodeURIComponent(week)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      
+      setBlocks(data.blocks);
+      // Transform the completions data to match the frontend structure
+      const newCompletedChoices = data.blocks.map((block: any) =>
+        block.choices.map((choice: any) => choice.completions)
+      );
+      setCompletedChoices(newCompletedChoices);
+      setDailyValueCreation(data.daily_value_creation);
+      setDailyMeditations(data.daily_meditations);
+      setDailyAffirmations(data.daily_affirmations || "");
+      setGuidingPrinciples(data.guiding_principles || "");
+    } catch (error) {
+      console.error('Error loading data:', error);
+      // Optionally show an error message to the user
+      alert('Failed to load data. Please try again.');
+    }
+  };
+
+  const handleDateChange = async (date: Date | null) => {
+    if (date) {
+      setSelectedDate(date);
+      const firstDayOfWeek = new Date(date);
+      firstDayOfWeek.setDate(date.getDate() - date.getDay() + 1);
+      const lastDayOfWeek = new Date(firstDayOfWeek);
+      lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+      const options: Intl.DateTimeFormatOptions = { 
+        month: "long", 
+        day: "numeric", 
+        year: "numeric" as "numeric" | "2-digit"
+      };
+      const selectedWeek = `${firstDayOfWeek.toLocaleDateString(undefined, options)} - ${lastDayOfWeek.toLocaleDateString(
+        undefined,
+        options
+      )}`;
+      setWeek(selectedWeek);
+      await loadData(selectedWeek);
+    }
   };
 
   const toggleCompletion = (blockIndex: number, choiceIndex: number, dayIndex: number) => {
@@ -199,13 +173,10 @@ export default function Home() {
     setDailyAffirmations(value);
   };
 
-<<<<<<< HEAD
   const handleGuidingPrinciplesChange = (value: string) => {
     setGuidingPrinciples(value);
   };
 
-=======
->>>>>>> 3fab617 (First commit)
   const handleAddChoice = (blockIndex: number) => {
     const updatedBlocks = [...blocks];
     updatedBlocks[blockIndex].choices.push("New Choice");
@@ -268,22 +239,44 @@ export default function Home() {
     },
   };
 
-  const saveData = () => {
-    localStorage.setItem(`blocks_${week}`, JSON.stringify(blocks));
-    localStorage.setItem(`completedChoices_${week}`, JSON.stringify(completedChoices));
-    localStorage.setItem(`dailyValueCreation_${week}`, JSON.stringify(dailyValueCreation));
-    localStorage.setItem(`dailyMeditations_${week}`, JSON.stringify(dailyMeditations));
-<<<<<<< HEAD
-<<<<<<< HEAD
-    localStorage.setItem(`dailyAffirmations_${week}`, JSON.stringify(dailyAffirmations));
-    localStorage.setItem(`guidingPrinciples_${week}`, guidingPrinciples);
-=======
->>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
-=======
-    localStorage.setItem(`dailyAffirmations_${week}`, JSON.stringify(dailyAffirmations));
->>>>>>> 3fab617 (First commit)
-    alert("Data saved successfully!");
-    loadAvailableWeeks();
+  const saveData = async () => {
+    try {
+      const payload = {
+        blocks: blocks.map((block, blockIndex) => ({
+          id: (block as any).id, // Add type assertion if needed
+          name: block.name,
+          description: block.description,
+          choices: block.choices.map((choice, choiceIndex) => ({
+            id: (choice as any).id, // Add type assertion if needed
+            text: choice,
+            completions: completedChoices[blockIndex][choiceIndex]
+          }))
+        })),
+        guidingPrinciples: guidingPrinciples,
+        dailyAffirmations: dailyAffirmations,
+        dailyValueCreation: dailyValueCreation,
+        dailyMeditations: dailyMeditations
+      };
+
+      const response = await fetch(`${API_BASE_URL}/data/${encodeURIComponent(week)}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save data');
+      }
+
+      const result = await response.json();
+      alert(result.message || 'Data saved successfully!');
+      loadAvailableWeeks(); // Refresh the list of available weeks
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('Failed to save data. Please try again.');
+    }
   };
 
   return (
@@ -315,7 +308,6 @@ export default function Home() {
           className="border p-2 rounded"
         />
       </div>
-<<<<<<< HEAD
       <div className="mt-6 border p-4 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">Guiding Principles</h2>
         <textarea
@@ -326,8 +318,6 @@ export default function Home() {
           placeholder="Write your guiding principles here..."
         />
       </div>
-=======
->>>>>>> c584326 (Implement calendar to select and load previous weeks' data)
       <div className="space-y-6">
         {blocks.map((block, blockIndex) => (
           <div key={blockIndex} className="border p-4 rounded shadow">
@@ -438,10 +428,10 @@ export default function Home() {
       <div className="mt-6 border p-4 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">Daily Affirmations</h2>
         <textarea
-          className="w-full border p-2 rounded h-64" // Ajuste de altura
+          className="w-full border p-2 rounded h-64"
           value={dailyAffirmations}
           onChange={(e) => handleAffirmationChange(e.target.value)}
-          rows={20} // Ajuste de filas
+          rows={20}
           placeholder="Write your daily affirmations here..."
         />
       </div>
