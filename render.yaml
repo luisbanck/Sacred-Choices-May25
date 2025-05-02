@@ -4,7 +4,7 @@ services:
     env: python
     rootDir: sacred-choices-backend
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:application --bind=0.0.0.0:$PORT --workers=2 --threads=4
+    startCommand: cd sacred-choices-backend && gunicorn --chdir . wsgi:application --bind=0.0.0.0:$PORT --workers=2 --threads=4
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -19,6 +19,6 @@ services:
       - key: ALLOWED_ORIGINS
         sync: false # Will be set manually in Render dashboard to your Vercel frontend URL
       - key: PYTHONPATH
-        value: .
+        value: /opt/render/project/src/sacred-choices-backend
     healthCheckPath: /api/weeks
     autoDeploy: true 
